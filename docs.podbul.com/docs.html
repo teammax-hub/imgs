@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podbul Public API Documentation</title>
+    <meta name="description" content="Podbul Public API interactive documentation powered by Stoplight Elements">
+    
+    <!-- Stoplight Elements CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/@stoplight/elements/styles.min.css">
+    
+    <!-- Custom styling -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .api-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .api-info-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info-card h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 1.2rem;
+        }
+        
+        .info-card p {
+            margin: 0;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        
+        .elements-container {
+            height: calc(100vh - 200px);
+            min-height: 600px;
+        }
+        
+        /* Custom theme for Stoplight Elements */
+        .sl-elements {
+            --color-primary: #667eea;
+            --color-primary-light: #8da2f7;
+            --color-primary-dark: #4c63d2;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header">
+        <h1>Podbul Public API</h1>
+        <p>Comprehensive API Documentation - Interactive Testing Capabilities</p>
+    </div>
+    
+    <!-- API Information Section -->
+    <div class="api-info">
+        <div class="api-info-content">
+            <div class="info-card">
+                <h3>🚀 Getting Started</h3>
+                <p>This API provides order management, catalog browsing and user authentication endpoints with consistent ApiResult responses.</p>
+            </div>
+            <div class="info-card">
+                <h3>🔐 Authentication</h3>
+                <p>Use your API key and secret with /auth/login endpoint to get JWT token. Add token to Authorization header as "Bearer {token}"</p>
+            </div>
+            <div class="info-card">
+                <h3>📊 Response Format</h3>
+                <p>All endpoints return standardized ApiResult&lt;T&gt; wrapper with success, data, message and error fields for consistent client handling.</p>
+            </div>
+            <div class="info-card">
+                <h3>💬 Support</h3>
+                <p>Contact our development team at <a href="https://docs.podbul.com/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b7d3d2c1f7c7d8d3d5c2db99d4d8da">[email&#160;protected]</a> for technical support and integration assistance</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stoplight Elements Container -->
+    <div class="elements-container">
+        <elements-api
+            id="docs"
+            apiDescriptionUrl="/swagger/v1/swagger.json"
+            router="hash"
+            layout="sidebar"
+            logo=""
+            hideInternal="false"
+            hideTryIt="false"
+            tryItCredentialsPolicy="include"
+        />
+    </div>
+    
+    <!-- Stoplight Elements JavaScript -->
+    <script data-cfasync="false" src="cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
+    
+    <!-- Custom JavaScript with Environment Detection -->
+    <script>
+        // Check if we're in development or production
+        async function initializeDocumentation() {
+            const elementsApi = document.querySelector('#docs');
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            async function tryLoadSpec() {
+                try {
+                    // Try to fetch OpenAPI spec (now available in production too)
+                    const response = await fetch('/swagger/v1/swagger.json');
+                    if (response.ok) {
+                        // OpenAPI available - use live spec
+                        console.log('OpenAPI specification loaded successfully');
+                        
+                        // Ensure elements-api uses the live spec
+                        if (elementsApi) {
+                            elementsApi.setAttribute('apiDescriptionUrl', '/swagger/v1/swagger.json');
+                        }
+                        
+                        // Hide any loading messages
+                        setTimeout(() => {
+                            const loadingMessage = document.querySelector('.elements-container div');
+                            if (loadingMessage && loadingMessage.textContent.includes('Loading')) {
+                                loadingMessage.style.display = 'none';
+                            }
+                        }, 2000);
+                        
+                        return true;
+                    } else {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                } catch (error) {
+                    console.log('Error loading OpenAPI spec (attempt ' + (retryCount + 1) + '):', error);
+                    retryCount++;
+                    
+                    if (retryCount < maxRetries) {
+                        // Retry after delay
+                        setTimeout(tryLoadSpec, 1000 * retryCount);
+                    } else {
+                        // Show fallback message after all retries failed
+                        showProductionMessage();
+                    }
+                    return false;
+                }
+            }
+            
+            return tryLoadSpec();
+        }
+        
+        function showProductionMessage() {
+            const container = document.querySelector('.elements-container');
+            container.innerHTML = `
+                <div style="padding: 40px; text-align: center; color: #666;">
+                    <h2>🔒 Loading Documentation...</h2>
+                    <p>Please wait while API documentation is loading.</p>
+                    <p>If this message persists, please refresh the page.</p>
+                    <div style="margin-top: 30px;">
+                        <p><strong>Contact:</strong> dev@podbul.com</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Set up documentation without base URL references
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize documentation
+            initializeDocumentation();
+            
+            // Wait for elements to load and customize
+            setTimeout(() => {
+                const elementsApi = document.querySelector('#docs');
+                if (elementsApi) {
+                    console.log('Podbul API Documentation loaded successfully');
+                }
+            }, 1000);
+        });
+        
+        // Add some interactive features
+        document.addEventListener('keydown', function(e) {
+            // Keyboard shortcuts
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'k':
+                        e.preventDefault();
+                        // Focus search if available
+                        const searchInput = document.querySelector('input[type="search"]');
+                        if (searchInput) searchInput.focus();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
